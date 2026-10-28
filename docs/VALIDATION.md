@@ -4,6 +4,8 @@
 
 更新：iOS 已在公開儲存庫的免費標準 GitHub macOS runner 完成雲端編譯。[Run #1 成功紀錄](https://github.com/tiffanychou0316/DropMP4/actions/runs/40745621106)，程式提交 `13b319aa36c6cbf8ff8ee6b34e445eee3be770bf`。
 
+測試更新：[Run #6](https://github.com/tiffanychou0316/DropMP4/actions/runs/40750419859) 在免費標準 `macos-15-intel` / Xcode 16.4 / iOS 18.5 iPhone 16 Simulator 實際執行四項 XCTest，全部通過，零失敗、零跳過。對應程式提交 `de0b4dceddd527cef2369ea8a607dc2b12a06147`。同一輪 iPhone SDK 編譯與 Windows 核心測試也通過。
+
 ## 已交付及已實測
 
 | 項目 | 結果與範圍 |
@@ -16,6 +18,7 @@
 | Windows 執行檔 | PyInstaller 6.16.0 onedir 成功，視窗正常啟動，顯示等待連線、核對碼、儲存位置 |
 | iOS 專案設定 | YAML 語法、來源目錄及 App / Share Extension / XCTest 依賴檢查通過；這不是 Swift 編譯測試 |
 | iOS 雲端編譯 | GitHub `macos-15` / Xcode 16.4：Simulator `build-for-testing` 與 iPhone SDK `build` 都成功；主 App、分享擴充功能及四項 XCTest 原始碼編譯通過 |
+| iOS XCTest 執行 | SHA-256 已知向量、原 MP4 分支、損毀 MOV 保留來源、合成 H.264 MOV passthrough 與內容比對：4 通過、0 失敗、0 跳過；由 `.xcresult` 摘要再次核對 |
 | 遠端 Windows CI | 同一次 GitHub Actions 執行的 15 項接收端核心測試通過 |
 | Windows GUI 接收 | 經實際確認對話框按「是」，接收 1,638,400 bytes 合成資料；進度條完成，畫面顯示 SHA-256 校驗通過 |
 
@@ -23,9 +26,10 @@ GUI 合成資料的 SHA-256：`99c89c5f95c8627ca23684dfa1cb0545183228f603bad520a
 
 打包檢查曾發現 bundled Python 的 SSL 模組需要額外 `codex-rejected-cas.pem`；已將原有憑證資源一併帶入 portable 的 `_internal/`，沒有移除或繞過驗證。建置腳本也有針對此環境的條件式資源收集。一般官方 Python 沒有這個檔案時不需要加入。
 
+首次執行 iOS 測試抓到 AVAssetReader 會回傳零 sample、零 bytes、沒有 data buffer 的控制標記，原本會誤判為缺少壓縮資料。已修正為保留並比對標記時間、可傳播與不可傳播的附件；非空 sample 缺少資料仍拒絕。H.264 測試的來源與 MP4 都驗證為 8 個壓縮 sample、578 bytes、4 個控制標記，影音資料 SHA-256 與標記一致。測試素材是程式產生的 64×64、8 畫格 H.264 MOV，不能代表所有真實 MOV / HEVC / HDR。沒有降低斷言、跳過或自動重試失敗測試。
+
 ## 尚未執行
 
-- iOS XCTest 執行：目前僅編譯測試原始碼，尚未啟動 Simulator 執行測試。
 - 真實 iPhone 的 Share Extension、App Group、區域網路權限與 Bonjour 連 Windows。
 - 真實 H.264 / HEVC MOV 的 AVFoundation passthrough 與壓縮樣本比對。
 - HDR、Dolby Vision、旋轉、多音軌、特殊 MOV 及 iCloud Photos 分享表示的實機相容性。
@@ -34,7 +38,7 @@ GUI 合成資料的 SHA-256：`99c89c5f95c8627ca23684dfa1cb0545183228f603bad520a
 
 雲端編譯仍有非阻擋警告：AVAssetExportSession 在 Swift 5 模式下的 Sendable 捕捉、舊的 Security 憑證 API、方向設定，以及官方 Actions 的 Node 20 相容警告。本輪編譯結果為成功；不代表已完成 Swift 6 遷移或商店發行驗收。
 
-因此目前定位是「Windows 已可執行並完成測試；iOS 已在 Apple SDK 環境編譯成功，待執行測試與真機驗收」。不能稱為已經跑通的雙機產品。未產生已簽署的安裝包，也未上傳 TestFlight。
+因此目前定位是「Windows 已可執行並完成測試；iOS 已完成雲端編譯與四項模擬器單元測試，待真機驗收」。不能稱為已經跑通的雙機產品。模擬器只有本機 ad-hoc 簽署，未使用 Apple 開發者帳號、未產生可安裝到 iPhone 的簽署包，也未上傳 TestFlight。
 
 ## Apple 環境驗收順序
 
@@ -61,7 +65,7 @@ GUI 合成資料的 SHA-256：`99c89c5f95c8627ca23684dfa1cb0545183228f603bad520a
 | 階段 | 本次狀態 | 交付門檻 |
 | --- | --- | --- |
 | 1A 傳輸基礎與 Windows | 完成並本機測試 | 可執行接收端、TLS、確認、進度、校驗、Bonjour、自動測試 |
-| 1B iOS 實作 | 雲端 Xcode build 通過，待測試執行與真機驗收 | XCTest 執行通過、真機分享匯入、實際 pin 連線 |
+| 1B iOS 實作 | 雲端 Xcode build 與四項 XCTest 通過，待真機驗收 | 真機分享匯入、實際 pin 連線 |
 | 1C 雙機 MVP 驗收 | 尚未完成 | 真實影片、格式保留/原檔分支、拒收/中斷、私人網路互通全流程 |
 | 2 公開免費測試版 | 後續工作 | 發布授權與依賴檢查、程式碼簽署、隱私說明、商店/安裝管道、使用者回饋 |
 | 3 可選自願支持 | 未實作 | 約 NT$30 的一次性自願支持，核心功能免費，不強迫註冊 |

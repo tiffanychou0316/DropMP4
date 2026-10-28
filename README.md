@@ -2,7 +2,7 @@
 
 這是可執行的第一階段開發版：Windows 桌面接收端與 iOS 原生 App / 分享擴充功能的完整原始碼。無帳號、不經雲端、不實作付款，也不包含 Android。
 
-**驗證範圍：Windows 已執行 16 項 HTTPS / 校驗 / 自動搜尋測試。iOS 已在 GitHub 雲端 Mac / Xcode 16.4 成功完成模擬器與 iPhone SDK 未簽署編譯，包含分享擴充功能與 XCTest 原始碼；尚未執行 iOS 測試、簽署或真實 iPhone 驗收。** [成功的雲端編譯](https://github.com/tiffanychou0316/DropMP4/actions/runs/40745621106)，詳見 [測試紀錄](docs/VALIDATION.md) 與 [雲端編譯說明](docs/GITHUB_ACTIONS.md)。
+**驗證範圍：Windows 已執行 16 項 HTTPS / 校驗 / 自動搜尋測試。iOS 已在免費 GitHub 雲端 Mac / Xcode 16.4 完成模擬器及 iPhone SDK 編譯，並在 iOS 18.5 Simulator 實際通過四項 XCTest：4 通過、0 失敗、0 跳過。** [編譯與測試成功紀錄](https://github.com/tiffanychou0316/DropMP4/actions/runs/40750419859)。尚未進行真實 iPhone 驗收或產生可安裝的簽署版本；詳見 [測試紀錄](docs/VALIDATION.md) 與 [雲端測試說明](docs/GITHUB_ACTIONS.md)。
 
 ## 技術取捨與內容
 
@@ -84,7 +84,7 @@ xcodebuild -project DropMP4.xcodeproj -scheme DropMP4 \
   -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build-for-testing
 ```
 
-單元測試：在 Xcode 選擇可用 iPhone Simulator 後按 Product → Test（⌘U），或 `xcodebuild ... -destination 'platform=iOS Simulator,id=<你的模擬器 UUID>' test`。分享匯入、區域網路權限、HDR / HEVC 與兩機傳輸仍須真機測試。GitHub Actions 已成功完成未簽署編譯；測試程式目前只編譯，沒有執行。
+單元測試：在 Xcode 選擇可用 iPhone Simulator 後按 Product → Test（⌘U），或 `xcodebuild ... -destination 'platform=iOS Simulator,id=<你的模擬器 UUID>' test`。GitHub Actions 已實際執行並通過四項測試，且檢查 `.xcresult` 的通過／失敗／跳過數量。分享匯入、區域網路權限、HDR / HEVC 與兩機傳輸仍須真機測試。
 
 ## 「免重編碼」的邊界
 
@@ -105,7 +105,7 @@ Apple 官方 API 說明：[AVAssetExportSession](https://developer.apple.com/doc
 
 第一組建立真正 HTTPS server 並透過 TLS 傳輸資料，不需要 iPhone；第二組使用真實網卡觀察 Bonjour 廣播，防火牆或 CI 隔離環境可能阻擋，應在實際私人網路測試。測試資料是合成二進位資料，不等同真實影片播放驗收。
 
-後續依 [驗收清單與階段](docs/VALIDATION.md) 執行 iOS 測試、真實 MOV 樣本測試、實機分享與雙裝置驗收後，才能稱為已跑通的 iPhone → Windows MVP。
+後續依 [驗收清單與階段](docs/VALIDATION.md) 完成真實 MOV 樣本測試、實機分享與雙裝置驗收後，才能稱為已跑通的 iPhone → Windows MVP。
 
 ## 目前限制
 
