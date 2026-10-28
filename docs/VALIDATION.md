@@ -2,6 +2,8 @@
 
 日期：2026-10-29（Asia/Taipei）。本文件區分實際執行證據與仍待驗收的項目，不以原始碼存在等同實機成功。
 
+更新：iOS 已在公開儲存庫的免費標準 GitHub macOS runner 完成雲端編譯。[Run #1 成功紀錄](https://github.com/tiffanychou0316/DropMP4/actions/runs/40745621106)，程式提交 `13b319aa36c6cbf8ff8ee6b34e445eee3be770bf`。
+
 ## 已交付及已實測
 
 | 項目 | 結果與範圍 |
@@ -13,6 +15,8 @@
 | Bonjour | 1 項獨立整合測試通過：真實 IPv4 網卡廣播、另一個 Zeroconf browser 發現服務、port 與 fingerprint 一致 |
 | Windows 執行檔 | PyInstaller 6.16.0 onedir 成功，視窗正常啟動，顯示等待連線、核對碼、儲存位置 |
 | iOS 專案設定 | YAML 語法、來源目錄及 App / Share Extension / XCTest 依賴檢查通過；這不是 Swift 編譯測試 |
+| iOS 雲端編譯 | GitHub `macos-15` / Xcode 16.4：Simulator `build-for-testing` 與 iPhone SDK `build` 都成功；主 App、分享擴充功能及四項 XCTest 原始碼編譯通過 |
+| 遠端 Windows CI | 同一次 GitHub Actions 執行的 15 項接收端核心測試通過 |
 | Windows GUI 接收 | 經實際確認對話框按「是」，接收 1,638,400 bytes 合成資料；進度條完成，畫面顯示 SHA-256 校驗通過 |
 
 GUI 合成資料的 SHA-256：`99c89c5f95c8627ca23684dfa1cb0545183228f603bad520a7ed8529f10e9728`。它不是可播放的影片，測的是完整桌面確認 → HTTPS → 寫檔 → 校驗 → UI 完成路徑。測試寫入獨立工作目錄，未包含於下載包。
@@ -21,15 +25,16 @@ GUI 合成資料的 SHA-256：`99c89c5f95c8627ca23684dfa1cb0545183228f603bad520a
 
 ## 尚未執行
 
-- iOS XcodeGen 產生與 Xcode build / XCTest：沒有 macOS、Apple SDK 與簽署環境。
+- iOS XCTest 執行：目前僅編譯測試原始碼，尚未啟動 Simulator 執行測試。
 - 真實 iPhone 的 Share Extension、App Group、區域網路權限與 Bonjour 連 Windows。
 - 真實 H.264 / HEVC MOV 的 AVFoundation passthrough 與壓縮樣本比對。
 - HDR、Dolby Vision、旋轉、多音軌、特殊 MOV 及 iCloud Photos 分享表示的實機相容性。
 - iOS URLSession 與自簽憑證釘選在實際裝置 / ATS 設定下的互通。
 - 乾淨 Windows 機器的 portable、SmartScreen / 程式碼簽署、長時間大檔與低磁碟空間測試。
-- GitHub Actions：workflow 已附上，未上傳或執行遠端 CI。
 
-因此目前定位是「Windows 已可執行並完成本機測試；iOS 已完成待 Apple 環境驗證的 MVP 實作」。不能稱為已經跑通的雙機產品。
+雲端編譯仍有非阻擋警告：AVAssetExportSession 在 Swift 5 模式下的 Sendable 捕捉、舊的 Security 憑證 API、方向設定，以及官方 Actions 的 Node 20 相容警告。本輪編譯結果為成功；不代表已完成 Swift 6 遷移或商店發行驗收。
+
+因此目前定位是「Windows 已可執行並完成測試；iOS 已在 Apple SDK 環境編譯成功，待執行測試與真機驗收」。不能稱為已經跑通的雙機產品。未產生已簽署的安裝包，也未上傳 TestFlight。
 
 ## Apple 環境驗收順序
 
@@ -56,9 +61,9 @@ GUI 合成資料的 SHA-256：`99c89c5f95c8627ca23684dfa1cb0545183228f603bad520a
 | 階段 | 本次狀態 | 交付門檻 |
 | --- | --- | --- |
 | 1A 傳輸基礎與 Windows | 完成並本機測試 | 可執行接收端、TLS、確認、進度、校驗、Bonjour、自動測試 |
-| 1B iOS 實作 | 原始碼完成，待 macOS 驗證 | Xcode build / XCTest 通過、真機分享匯入、實際 pin 連線 |
+| 1B iOS 實作 | 雲端 Xcode build 通過，待測試執行與真機驗收 | XCTest 執行通過、真機分享匯入、實際 pin 連線 |
 | 1C 雙機 MVP 驗收 | 尚未完成 | 真實影片、格式保留/原檔分支、拒收/中斷、私人網路互通全流程 |
 | 2 公開免費測試版 | 後續工作 | 發布授權與依賴檢查、程式碼簽署、隱私說明、商店/安裝管道、使用者回饋 |
 | 3 可選自願支持 | 未實作 | 約 NT$30 的一次性自願支持，核心功能免費，不強迫註冊 |
 
-未公開部署、未建立遠端儲存庫、未上傳任何使用者影片。專案採 MIT 授權；第三方元件保留各自授權。
+已依使用者授權建立公開原始碼儲存庫 https://github.com/tiffanychou0316/DropMP4 並執行免費雲端編譯。未上傳任何使用者影片、簽署憑證或私鑰。專案採 MIT 授權；第三方元件保留各自授權。
