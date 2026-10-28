@@ -16,6 +16,7 @@ enum Remux {
         let hash: String
         let bytes: Int
         let samples: Int
+        let emptyIntervals: [String]
     }
 
     // Nil outputSettings asks AVAssetReader for compressed samples, not decoded pixels.
@@ -48,13 +49,30 @@ enum Remux {
             var hash = SHA256()
             var total = 0
             var samples = 0
+            var emptyIntervals: [String] = []
             do {
                 while let sample = output.copyNextSampleBuffer() {
                     try Task.checkCancellation()
+                    // AVAssetReader can emit attachment-only stream markers, which
+                    // are not missing compressed frames. Preserve and compare their
+                    // timing instead of treating them as payload or ignoring them.
+                    let empty = CMGetAttachment(sample, key: kCMSampleBufferAttachmentKey_EmptyMedia,
+                                                attachmentModeOut: nil) as? Bool == true
+                    let end = CMGetAttachment(sample, key: kCMSampleBufferAttachmentKey_PermanentEmptyMedia,
+                                              attachmentModeOut: nil) as? Bool == true
+                    if CMSampleBufferGetNumSamples(sample) == 0,
+                       CMSampleBufferGetTotalSampleSize(sample) == 0,
+                       CMSampleBufferGetImageBuffer(sample) == nil, empty || end {
+                        let pts = CMSampleBufferGetOutputPresentationTimeStamp(sample).seconds
+                        let duration = CMSampleBufferGetOutputDuration(sample).seconds
+                        emptyIntervals.append("\(empty):\(end):" + String(format: "%.6f:%.6f", pts, duration))
+                        continue
+                    }
                     guard let buffer = CMSampleBufferGetDataBuffer(sample) else {
-                        throw DropError.message("無法驗證壓縮資料，請保留原始 MOV。")
+                        throw DropError.message("無法驗證壓縮資料（samples=\(CMSampleBufferGetNumSamples(sample)), bytes=\(CMSampleBufferGetTotalSampleSize(sample)), empty=\(empty), end=\(end)），請保留原始 MOV。")
                     }
                     let length = CMBlockBufferGetDataLength(buffer)
+                    guard length > 0 else { throw DropError.message("壓縮影音 sample 沒有資料，請保留原始 MOV。") }
                     var data = Data(count: length)
                     let status = data.withUnsafeMutableBytes { bytes in
                         CMBlockBufferCopyDataBytes(buffer, atOffset: 0, dataLength: length,
@@ -67,8 +85,10 @@ enum Remux {
                 }
             } catch { reader.cancelReading(); throw error }
             guard reader.status == .completed else { throw reader.error ?? DropError.message("影片讀取未完成。") }
+            guard total > 0, samples > 0 else { throw DropError.message("影音軌道沒有可驗證的壓縮資料。") }
             result.append(TrackSignature(media: type.rawValue, codec: codec,
-                hash: hash.finalize().map { String(format: "%02x", $0) }.joined(), bytes: total, samples: samples))
+                hash: hash.finalize().map { String(format: "%02x", $0) }.joined(), bytes: total,
+                samples: samples, emptyIntervals: emptyIntervals))
         }
         guard result.contains(where: { $0.media == AVMediaType.video.rawValue }) else {
             throw DropError.message("找不到影片軌道。")
