@@ -1,21 +1,23 @@
 # 免費雲端 Mac 編譯
 
-此流程只在公開儲存庫使用 GitHub 標準 `macos-15` runner，固定 Xcode 16.4。沒有 Apple 帳號、憑證、付款、TestFlight 或影片上傳。若儲存庫改為私人，工作會跳過，避免消耗私人額度或產生費用。
+此流程只在公開儲存庫使用 GitHub 標準 `macos-15-intel` runner，固定 Xcode 16.4。原先的 `macos-15` Apple 晶片 runner 排程壅塞，改用同樣免費的 Intel 標準 runner。沒有 Apple 帳號、開發者簽署憑證、付款、TestFlight 或影片上傳。模擬器使用本機 ad-hoc 簽署；iPhone SDK 產物保持未簽署。若儲存庫改為私人，工作會跳過，避免消耗私人額度或產生費用。
 
 ## 流程內容
 
 1. 在雲端 Mac 安裝 XcodeGen，從 `ios/project.yml` 產生 Xcode 專案。
 2. 對 iOS Simulator 執行 `build-for-testing`，編譯主 App、分享擴充功能及四項 XCTest 的原始碼。
 3. 對 iPhone SDK 執行未簽署的 `build`，檢查與 Simulator 不同的平台編譯問題。
-4. 不論成功或失敗，都保留純文字建置記錄、Xcode `.xcresult` 與產生的專案設定，保留三天。
+4. 從已安裝的 iOS 18.5 模擬器選取一台可用 iPhone，啟動後執行 `test-without-building`，執行四項 XCTest，不自動重試失敗測試。
+5. 從 `.xcresult` 讀取實際測試摘要，要求四項通過、零失敗、零跳過；空跑不算成功。
+6. 不論成功或失敗，都保留純文字記錄、JSON 摘要、Xcode `.xcresult` 與產生的專案設定，保留三天。
 
-測試程式此階段只編譯，尚未執行；未簽署的產物也不能直接安裝到 iPhone。完整真機分享、AVFoundation 行為與區域網路互通仍須後續驗收。
+測試涵蓋 SHA-256 已知向量、原始 MP4 分支、損毀 MOV 保留來源，以及模擬器產生 H.264 MOV 的 passthrough 與壓縮影音資料校驗。模擬器測試不能取代真實 iPhone 的分享匯入、HEVC / HDR 或區域網路互通驗收。未簽署的 iPhone 產物也不能直接安裝到手機。
 
 ## 啟動與看結果
 
 將專案根目錄內容放在 GitHub 儲存庫根目錄（根目錄應直接看得到 `ios`、`receiver` 與 `.github`，不要多包一層 `DropMP4`）。推送 `main` 或建立 PR 都會啟動。也可到 Actions → DropMP4 checks → Run workflow 手動啟動。
 
-通過的標準是該次執行的 **iOS unsigned build (Simulator + iPhone)** 工作綠燈；Windows receiver 是獨立檢查，不能用它的綠燈代替 iOS 結果。若失敗，先看失敗步驟最後的 `error:`，或下載 `ios-build-diagnostics-<編號>`。修正後再推送新的提交，檢查新提交對應的執行結果。
+通過的標準是該次執行的 **iOS build and Simulator tests** 工作綠燈，且工作摘要顯示 `4 passed, 0 failed, 0 skipped`；Windows receiver 是獨立檢查，不能用它的綠燈代替 iOS 結果。若失敗，先看失敗步驟最後的 `error:`，或下載 `ios-build-diagnostics-<編號>`。修正後再推送新的提交，檢查新提交對應的執行結果。
 
 不需要設定 GitHub Secrets。請勿上傳私鑰、`.p12`、provisioning profiles、Apple 密碼或影片。GitHub 連線工具若看不到新儲存庫，可到連線設定授權該儲存庫；Actions workflow 寫入權限若未開放，需使用 GitHub 網站完成首次 workflow 檔案上傳。
 
