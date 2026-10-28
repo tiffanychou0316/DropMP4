@@ -10,13 +10,19 @@ struct PreparedVideo {
 }
 
 enum Remux {
+    private struct StreamMarker: Equatable {
+        let timing: String
+        let propagated: NSDictionary
+        let local: NSDictionary
+    }
+
     private struct TrackSignature: Equatable {
         let media: String
         let codec: FourCharCode
         let hash: String
         let bytes: Int
         let samples: Int
-        let emptyIntervals: [String]
+        let emptyIntervals: [StreamMarker]
     }
 
     // Nil outputSettings asks AVAssetReader for compressed samples, not decoded pixels.
@@ -49,30 +55,35 @@ enum Remux {
             var hash = SHA256()
             var total = 0
             var samples = 0
-            var emptyIntervals: [String] = []
+            var emptyIntervals: [StreamMarker] = []
             do {
                 while let sample = output.copyNextSampleBuffer() {
                     try Task.checkCancellation()
                     // AVAssetReader can emit attachment-only stream markers, which
                     // are not missing compressed frames. Preserve and compare their
                     // timing instead of treating them as payload or ignoring them.
-                    let empty = CMGetAttachment(sample, key: kCMSampleBufferAttachmentKey_EmptyMedia,
-                                                attachmentModeOut: nil) as? Bool == true
-                    let end = CMGetAttachment(sample, key: kCMSampleBufferAttachmentKey_PermanentEmptyMedia,
-                                              attachmentModeOut: nil) as? Bool == true
                     if CMSampleBufferGetNumSamples(sample) == 0,
                        CMSampleBufferGetTotalSampleSize(sample) == 0,
-                       CMSampleBufferGetImageBuffer(sample) == nil, empty || end {
-                        let pts = CMSampleBufferGetOutputPresentationTimeStamp(sample).seconds
-                        let duration = CMSampleBufferGetOutputDuration(sample).seconds
-                        emptyIntervals.append("\(empty):\(end):" + String(format: "%.6f:%.6f", pts, duration))
+                       CMSampleBufferGetImageBuffer(sample) == nil {
+                        // Stream markers are not limited to EmptyMedia / PermanentEmptyMedia.
+                        // A zero-sample buffer may carry another timing/control event.
+                        let timing = [CMSampleBufferGetOutputPresentationTimeStamp(sample),
+                                      CMSampleBufferGetDecodeTimeStamp(sample),
+                                      CMSampleBufferGetOutputDuration(sample)].map { time in
+                            "\(time.flags.rawValue):\(time.epoch):" + String(format: "%.9f", time.seconds)
+                        }.joined(separator: "|")
+                        let propagated = CMCopyDictionaryOfAttachments(allocator: kCFAllocatorDefault,
+                            target: sample, attachmentMode: kCMAttachmentMode_ShouldPropagate) as NSDictionary? ?? NSDictionary()
+                        let local = CMCopyDictionaryOfAttachments(allocator: kCFAllocatorDefault,
+                            target: sample, attachmentMode: kCMAttachmentMode_ShouldNotPropagate) as NSDictionary? ?? NSDictionary()
+                        emptyIntervals.append(StreamMarker(timing: timing, propagated: propagated, local: local))
                         guard emptyIntervals.count <= 4096 else {
                             throw DropError.message("影音空白區段標記過多，無法確認封裝相容性，請保留原始 MOV。")
                         }
                         continue
                     }
                     guard let buffer = CMSampleBufferGetDataBuffer(sample) else {
-                        throw DropError.message("無法驗證壓縮資料（samples=\(CMSampleBufferGetNumSamples(sample)), bytes=\(CMSampleBufferGetTotalSampleSize(sample)), empty=\(empty), end=\(end)），請保留原始 MOV。")
+                        throw DropError.message("無法驗證壓縮資料（samples=\(CMSampleBufferGetNumSamples(sample)), bytes=\(CMSampleBufferGetTotalSampleSize(sample))），請保留原始 MOV。")
                     }
                     let length = CMBlockBufferGetDataLength(buffer)
                     guard length > 0 else { throw DropError.message("壓縮影音 sample 沒有資料，請保留原始 MOV。") }
