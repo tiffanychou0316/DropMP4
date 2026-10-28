@@ -26,23 +26,44 @@ common=(
   -project DropMP4.xcodeproj
   -scheme DropMP4
   -configuration Debug
-  CODE_SIGNING_ALLOWED=NO
-  CODE_SIGNING_REQUIRED=NO
-  "CODE_SIGN_IDENTITY="
   COMPILER_INDEX_STORE_ENABLE=NO
 )
 
-# XCTest is compiled here; no simulator boot or provisioning is required.
+# Simulator signing is local ad-hoc signing; no Apple account or certificate.
+simulator_signing=(CODE_SIGNING_ALLOWED=YES CODE_SIGNING_REQUIRED=NO "CODE_SIGN_IDENTITY=-")
+unsigned=(CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO "CODE_SIGN_IDENTITY=")
+
 xcodebuild "${common[@]}" \
+  "${simulator_signing[@]}" \
   -destination 'generic/platform=iOS Simulator' \
   -derivedDataPath "$output/DerivedData-simulator" \
   -resultBundlePath "$output/SimulatorBuild.xcresult" \
   build-for-testing 2>&1 | tee "$output/simulator-build.log"
 
-# Catch differences between Simulator and actual iPhone SDK compilation.
-# An unsigned iPhone build is NOT an installable IPA.
 xcodebuild "${common[@]}" \
+  "${unsigned[@]}" \
   -destination 'generic/platform=iOS' \
   -derivedDataPath "$output/DerivedData-iphone" \
   -resultBundlePath "$output/iPhoneBuild.xcresult" \
   build 2>&1 | tee "$output/iphone-build.log"
+
+xcrun simctl list devices available --json > "$output/simulators.json"
+simulator_id="$(python3 "$project_root/scripts/select_simulator.py" "$output/simulators.json")"
+echo "Selected iPhone Simulator: $simulator_id" | tee "$output/selected-simulator.txt"
+trap 'xcrun simctl shutdown "$simulator_id" >/dev/null 2>&1 || true' EXIT
+xcrun simctl bootstatus "$simulator_id" -b 2>&1 | tee "$output/simulator-boot.log"
+
+# Execute the already-built tests exactly once, on one destination.
+xcodebuild "${common[@]}" \
+  "${simulator_signing[@]}" \
+  -destination "platform=iOS Simulator,id=$simulator_id" \
+  -destination-timeout 120 \
+  -derivedDataPath "$output/DerivedData-simulator" \
+  -resultBundlePath "$output/SimulatorTests.xcresult" \
+  -parallel-testing-enabled NO \
+  -maximum-concurrent-test-simulator-destinations 1 \
+  test-without-building 2>&1 | tee "$output/simulator-tests.log"
+
+xcrun xcresulttool get test-results summary \
+  --path "$output/SimulatorTests.xcresult" > "$output/test-summary.json"
+python3 "$project_root/scripts/verify_ios_results.py" "$output/test-summary.json"
