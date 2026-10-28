@@ -62,6 +62,9 @@ xcodebuild "${common[@]}" \
   -resultBundlePath "$output/SimulatorTests.xcresult" \
   -parallel-testing-enabled NO \
   -maximum-concurrent-test-simulator-destinations 1 \
+  -test-timeouts-enabled YES \
+  -default-test-execution-time-allowance 60 \
+  -maximum-test-execution-time-allowance 120 \
   test-without-building 2>&1 | tee "$output/simulator-tests.log"
 
 xcrun xcresulttool get test-results summary \

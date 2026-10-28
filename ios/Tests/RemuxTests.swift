@@ -26,10 +26,14 @@ final class RemuxTests: XCTestCase {
     }
 
     func testH264PassthroughPreservesSource() async throws {
+        executionTimeAllowance = 60
+        print("H264 test: generating fixture")
         let file = try await movie()
+        print("H264 test: fixture written; preparing passthrough")
         defer { try? FileManager.default.removeItem(at: file) }
         let digest = try FileDigest.sha256(file)
         let result = try await Remux.prepare(file)
+        print("H264 test: passthrough and payload verification completed")
         defer { try? FileManager.default.removeItem(at: result.url) }
         XCTAssertTrue(result.remuxed)
         XCTAssertEqual(result.url.pathExtension, "mp4")

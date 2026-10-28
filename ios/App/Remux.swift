@@ -66,6 +66,9 @@ enum Remux {
                         let pts = CMSampleBufferGetOutputPresentationTimeStamp(sample).seconds
                         let duration = CMSampleBufferGetOutputDuration(sample).seconds
                         emptyIntervals.append("\(empty):\(end):" + String(format: "%.6f:%.6f", pts, duration))
+                        guard emptyIntervals.count <= 4096 else {
+                            throw DropError.message("影音空白區段標記過多，無法確認封裝相容性，請保留原始 MOV。")
+                        }
                         continue
                     }
                     guard let buffer = CMSampleBufferGetDataBuffer(sample) else {
@@ -86,6 +89,9 @@ enum Remux {
             } catch { reader.cancelReading(); throw error }
             guard reader.status == .completed else { throw reader.error ?? DropError.message("影片讀取未完成。") }
             guard total > 0, samples > 0 else { throw DropError.message("影音軌道沒有可驗證的壓縮資料。") }
+            #if DEBUG
+            print("DropMP4 track verified: codec=\(codec), samples=\(samples), bytes=\(total), emptyIntervals=\(emptyIntervals.count)")
+            #endif
             result.append(TrackSignature(media: type.rawValue, codec: codec,
                 hash: hash.finalize().map { String(format: "%02x", $0) }.joined(), bytes: total,
                 samples: samples, emptyIntervals: emptyIntervals))
