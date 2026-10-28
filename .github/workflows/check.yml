@@ -1,0 +1,61 @@
+name: DropMP4 checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dropmp4-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  receiver:
+    # Public standard runners are free. Do not incur private-repo usage if visibility changes.
+    if: github.event.repository.private == false
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - run: python -m unittest discover -s tests -p test_receiver.py -v
+  ios-build:
+    name: iOS unsigned build (Simulator + iPhone)
+    if: github.event.repository.private == false
+    runs-on: macos-15
+    timeout-minutes: 25
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install XcodeGen
+        run: command -v xcodegen >/dev/null || brew install xcodegen
+      - name: Build app, share extension and tests without signing
+        run: bash scripts/ci-ios.sh
+      - name: Collect build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-diagnostics-${{ github.run_number }}
+          path: |
+            build/ios-ci/*.log
+            build/ios-ci/*.txt
+            build/ios-ci/*.xcresult
+            ios/DropMP4.xcodeproj/project.pbxproj
+          if-no-files-found: warn
+          retention-days: 3
+      - name: Explain build scope
+        if: always()
+        run: |
+          echo '### DropMP4 iOS compile check' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Builds the app and share extension for Simulator and iPhone, plus Simulator XCTest sources.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'No signing, Apple account, payment, TestFlight or device installation. Tests are compiled, not executed.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Download the diagnostics artifact to inspect compiler errors and Xcode result bundles.' >> "$GITHUB_STEP_SUMMARY"
