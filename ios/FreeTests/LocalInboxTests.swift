@@ -8,7 +8,18 @@ final class LocalInboxTests: XCTestCase {
         let documents = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask,
                                                     appropriateFor: nil, create: true)
         XCTAssertEqual(try Inbox.directory().standardizedFileURL,
-                       documents.appendingPathComponent("Inbox", isDirectory: true).standardizedFileURL)
+                       documents.appendingPathComponent("ImportedVideos", isDirectory: true).standardizedFileURL)
+        XCTAssertNotEqual(try Inbox.directory().lastPathComponent, "Inbox",
+                          "iOS reserves Documents/Inbox; simulator writes alone cannot validate this restriction")
+    }
+
+    func testStorageCanWriteAndRefresh() throws {
+        let directory = try Inbox.directory()
+        let probe = directory.appendingPathComponent(UUID().uuidString + ".mp4")
+        defer { try? FileManager.default.removeItem(at: probe) }
+        try Data([1, 2, 3]).write(to: probe)
+        XCTAssertTrue(try Inbox.files().contains(probe))
+        XCTAssertEqual(try Inbox.directory(), directory)
     }
 
     func testImportPreservesSourceAndBytes() throws {

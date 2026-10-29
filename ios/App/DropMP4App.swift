@@ -73,7 +73,11 @@ final class SenderModel: ObservableObject {
                 busy = false
                 refresh()
                 choose(local)
-            } catch { busy = false; failure = error.localizedDescription }
+            } catch {
+                busy = false
+                status = "匯入未完成，請重新選擇影片。"
+                failure = error.localizedDescription
+            }
         }
     }
     nonisolated private static func copyImport(_ url: URL) async throws -> URL {

@@ -4,13 +4,15 @@
 
 ## 這個測試版與完整版的差異
 
-`DropMP4 Test` 是獨立 Target：`org.dropmp4.freetest`。它使用 App 自己的 Documents/Inbox，不含 App Groups、分享擴充功能或付費功能。影片先從照片儲存到「檔案 → 我的 iPhone」，再由 App 的「從檔案匯入影片」匯入。這是為了減少免費簽署的能力需求，不代表照片分享流程已完成真機驗收。原本的完整版與照片分享擴充功能保留在 `DropMP4` Target。
+`DropMP4 Test` 是獨立 Target：`org.dropmp4.freetest`。它使用 App 自己的 Documents/ImportedVideos，不含 App Groups、分享擴充功能或付費功能。影片先從照片儲存到「檔案 → 我的 iPhone」，再由 App 的「從檔案匯入影片」匯入。這是為了減少免費簽署的能力需求，不代表照片分享流程已完成真機驗收。原本的完整版與照片分享擴充功能保留在 `DropMP4` Target。
+
+0.1.1（build 2）修正真機匯入時無法寫入 Inbox 的錯誤：iOS 的 Documents/Inbox 是系統保留、不能由 App 建立或寫入的資料夾；舊版模擬器通過不能代表真機可寫。新增路徑與寫入回歸檢查，另修正重新搜尋時舊回報覆蓋電腦已找到狀態。升級時在 Sideloadly 使用同一 Apple 帳號、同一 bundle ID 覆蓋安裝即可，不需先刪除 App。真機仍須重新驗收匯入、傳送、接收確認與 SHA-256。
 
 主 App 的 HTTPS、憑證核對、接收確認、SHA-256、AVFoundation passthrough 與原始 MOV 選項共用同一份程式。測試版不會把簽署用的 Apple 帳號當作 App 登入帳號；App 本身沒有帳號功能。
 
 ## 先取得測試檔
 
-GitHub Actions 的 **Free iPhone test package (6 tests)** 工作通過後，下載該次執行的 `DropMP4-Free-unsigned` artifact，解壓縮後找到：
+GitHub Actions 的 **Free iPhone test package (9 tests)** 工作通過後，下載該次執行的 `DropMP4-Free-unsigned` artifact，解壓縮後找到：
 
 - `DropMP4-Free-unsigned.ipa`：未簽署 iPhoneOS / arm64 安裝內容。
 - `DropMP4-Free-unsigned.ipa.sha256`：下載完整性校驗碼。

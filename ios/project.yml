@@ -23,6 +23,8 @@ targets:
       path: Generated/Free-Info.plist
       properties:
         CFBundleDisplayName: DropMP4 Test
+        CFBundleShortVersionString: '0.1.1'
+        CFBundleVersion: '2'
         UILaunchScreen: {}
         UIRequiresFullScreen: true
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]

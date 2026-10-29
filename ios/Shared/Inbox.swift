@@ -12,13 +12,15 @@ enum Inbox {
         #if DROPMP4_FREE_TEST
         let root = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask,
                                                appropriateFor: nil, create: true)
+        // Documents/Inbox is reserved by iOS for incoming documents and is not writable.
+        let url = root.appendingPathComponent("ImportedVideos", isDirectory: true)
         #else
         guard let group = Bundle.main.object(forInfoDictionaryKey: "SharedGroup") as? String,
               let root = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: group) else {
             throw DropError.message("App Group 尚未設定，請檢查兩個 Target 的簽署設定。")
         }
-        #endif
         let url = root.appendingPathComponent("Inbox", isDirectory: true)
+        #endif
         try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
         return url
     }

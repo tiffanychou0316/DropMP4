@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   iphone-free:
-    name: Free iPhone test package (6 tests)
+    name: Free iPhone test package (9 tests)
     if: github.event.repository.private == false
     runs-on: macos-15-intel
     timeout-minutes: 25
@@ -26,7 +26,7 @@ jobs:
           persist-credentials: false
       - name: Install XcodeGen
         run: command -v xcodegen >/dev/null || brew install xcodegen
-      - name: Build standalone iPhone package and run six Simulator tests
+      - name: Build standalone iPhone package and run nine Simulator tests
         run: bash scripts/ci-iphone-free.sh
       - name: Upload tested unsigned IPA for Windows local signing
         uses: actions/upload-artifact@v4

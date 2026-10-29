@@ -36,4 +36,4 @@ xcodebuild "${common[@]}" CODE_SIGNING_ALLOWED=YES CODE_SIGNING_REQUIRED=NO CODE
   -maximum-test-execution-time-allowance 120 \
   test-without-building 2>&1 | tee "$output/simulator-tests.log"
 xcrun xcresulttool get test-results summary --path "$output/FreeTests.xcresult" > "$output/test-summary.json"
-python3 "$project_root/scripts/verify_ios_results.py" "$output/test-summary.json" --expected 6
+python3 "$project_root/scripts/verify_ios_results.py" "$output/test-summary.json" --expected 9
