@@ -6,6 +6,8 @@
 
 測試更新：[Run #6](https://github.com/tiffanychou0316/DropMP4/actions/runs/40750419859) 在免費標準 `macos-15-intel` / Xcode 16.4 / iOS 18.5 iPhone 16 Simulator 實際執行四項 XCTest，全部通過，零失敗、零跳過。對應程式提交 `de0b4dceddd527cef2369ea8a607dc2b12a06147`。同一輪 iPhone SDK 編譯與 Windows 核心測試也通過。
 
+免費實機測試包：[Run #7](https://github.com/tiffanychou0316/DropMP4/actions/runs/40791310508)，提交 `bc6e2fdaba7e6302c3e168f8ed70bae89fa9e0a7`，新 `DropMP4Free` Target 通過六項 XCTest（原四項，加上不依賴 App Groups 的本機 Documents 儲存，以及匯入來源與位元組保留）；0 失敗、0 跳過。完整版四項回歸測試與 Windows 核心測試同輪通過。Release iPhoneOS / arm64 IPA 已下載並核對 CI SHA-256：`cb897c652f67aa15d8bfaf4f5e5c2cb8f6a8c569348ec7704f16a5a1901c553e`，124,913 bytes，最低 iOS 16.0，沒有 PlugIns、App Group Info、簽署資料或 provisioning profile。這是需要 Windows 本機重新簽署的未簽署 IPA，尚未安裝到真實 iPhone。
+
 ## 已交付及已實測
 
 | 項目 | 結果與範圍 |
@@ -19,6 +21,7 @@
 | iOS 專案設定 | YAML 語法、來源目錄及 App / Share Extension / XCTest 依賴檢查通過；這不是 Swift 編譯測試 |
 | iOS 雲端編譯 | GitHub `macos-15` / Xcode 16.4：Simulator `build-for-testing` 與 iPhone SDK `build` 都成功；主 App、分享擴充功能及四項 XCTest 原始碼編譯通過 |
 | iOS XCTest 執行 | SHA-256 已知向量、原 MP4 分支、損毀 MOV 保留來源、合成 H.264 MOV passthrough 與內容比對：4 通過、0 失敗、0 跳過；由 `.xcresult` 摘要再次核對 |
+| 免費 iPhone 測試版 | 六項模擬器測試通過，無 App Groups / 分享擴充功能；未簽署 arm64 IPA 已完成格式、內容及 SHA-256 檢查，待使用者在 Windows 簽署安裝 |
 | 遠端 Windows CI | 同一次 GitHub Actions 執行的 15 項接收端核心測試通過 |
 | Windows GUI 接收 | 經實際確認對話框按「是」，接收 1,638,400 bytes 合成資料；進度條完成，畫面顯示 SHA-256 校驗通過 |
 

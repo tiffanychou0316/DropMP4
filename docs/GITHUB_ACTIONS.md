@@ -22,3 +22,9 @@
 不需要設定 GitHub Secrets。請勿上傳私鑰、`.p12`、provisioning profiles、Apple 密碼或影片。GitHub 連線工具若看不到新儲存庫，可到連線設定授權該儲存庫；Actions workflow 寫入權限若未開放，需使用 GitHub 網站完成首次 workflow 檔案上傳。
 
 GitHub 官方計費說明：https://docs.github.com/en/actions/concepts/billing-and-usage
+
+## 免費 iPhone 測試包工作
+
+同一 workflow 新增 **Free iPhone test package (6 tests)**：獨立建置 `DropMP4Free`，跑原四項影音測試及兩項本機儲存測試，要求 6 通過、0 失敗、0 跳過。iPhone Release 產物不含 App Groups、分享擴充功能或 provisioning profile。只有六項測試通過才提供 `DropMP4-Free-unsigned` artifact，包含 IPA、SHA-256 與安裝指引，保留七天。
+
+這個 IPA 需要在 Windows 由使用者自己的免費 Apple 帳號簽署，GitHub 不接受 Apple 密碼或憑證。不使用 TestFlight；[安裝步驟](IPHONE_WINDOWS_FREE.md)。[Run #7](https://github.com/tiffanychou0316/DropMP4/actions/runs/40791310508) 已完成第一次六項測試與打包驗證。

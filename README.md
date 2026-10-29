@@ -6,6 +6,8 @@
 
 ## 技術取捨與內容
 
+只有 Windows、想免費裝到自己的 iPhone：請看 [Windows 免費安裝與真機驗收流程](docs/IPHONE_WINDOWS_FREE.md)。已提供不含 App Groups / 分享擴充功能的 `DropMP4 Test` 獨立版本，使用「檔案」匯入。它已通過六項模擬器測試並產生未簽署 IPA；需要你在 Windows 用自己的免費 Apple 帳號本機簽署後才能安裝。原本照片分享完整版保留。[Run #7 建置與測試紀錄](https://github.com/tiffanychou0316/DropMP4/actions/runs/40791310508)。
+
 現有機器無 Flutter、Dart、.NET 或 Xcode。第一版採 SwiftUI + AVFoundation（iPhone）與 Python 3.12 + Tkinter（Windows），先交付可測試的傳輸協定與原生影音流程。共用 UI 可於下一階段導入 Flutter，沿用 HTTPS 協定；目前不宣稱已有 Flutter 專案。
 
 | 目錄 | 內容 |
