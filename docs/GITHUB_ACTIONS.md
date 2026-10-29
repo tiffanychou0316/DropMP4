@@ -25,6 +25,7 @@ GitHub 官方計費說明：https://docs.github.com/en/actions/concepts/billing-
 
 ## 免費 iPhone 測試包工作
 
-同一 workflow 新增 **Free iPhone test package (6 tests)**：獨立建置 `DropMP4Free`，跑原四項影音測試及兩項本機儲存測試，要求 6 通過、0 失敗、0 跳過。iPhone Release 產物不含 App Groups、分享擴充功能或 provisioning profile。只有六項測試通過才提供 `DropMP4-Free-unsigned` artifact，包含 IPA、SHA-256 與安裝指引，保留七天。
+同一 workflow 的 **Free iPhone test package (9 tests)** 獨立建置 `DropMP4Free`，跑原四項影音測試、三項本機儲存測試與兩項搜尋狀態測試，要求 9 通過、0 失敗、0 跳過。iPhone Release 產物不含 App Groups、分享擴充功能或 provisioning profile。只有九項測試通過才提供 `DropMP4-Free-unsigned` artifact，包含 IPA、SHA-256 與安裝指引，保留七天。儲存測試除了確認可寫入，也明確拒絕 iOS 保留的 Documents/Inbox 路徑，避免模擬器較寬鬆的行為掩蓋真機限制。
 
 這個 IPA 需要在 Windows 由使用者自己的免費 Apple 帳號簽署，GitHub 不接受 Apple 密碼或憑證。不使用 TestFlight；[安裝步驟](IPHONE_WINDOWS_FREE.md)。[Run #7](https://github.com/tiffanychou0316/DropMP4/actions/runs/40791310508) 已完成第一次六項測試與打包驗證。
+
