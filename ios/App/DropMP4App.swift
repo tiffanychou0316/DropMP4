@@ -6,7 +6,7 @@ final class SenderModel: ObservableObject {
     @Published var files: [URL] = []
     @Published var selected: URL?
     @Published var prepared: PreparedVideo?
-    @Published var status = "從照片的分享選單匯入影片，再回到這裡傳送。"
+    @Published var status = AppFeatures.importHint
     @Published var busy = false
     @Published var fraction: Double = 0
     @Published var failure: String?
@@ -127,7 +127,7 @@ struct SenderView: View {
                 }
                 Section("1. 選擇影片") {
                     if model.files.isEmpty {
-                        Text("照片 → 分享 → DropMP4 → 完成，然後回到這裡。")
+                        Text(AppFeatures.importHint)
                             .foregroundStyle(.secondary)
                     }
                     ForEach(model.files, id: \.self) { file in
@@ -159,7 +159,7 @@ struct SenderView: View {
                         .font(.footnote).foregroundStyle(.secondary)
                 }
             }
-            .navigationTitle("DropMP4")
+            .navigationTitle(AppFeatures.title)
             .fileImporter(isPresented: $importing, allowedContentTypes: [.movie]) { result in
                 switch result {
                 case .success(let url): model.importFile(url)

@@ -13,6 +13,50 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  iphone-free:
+    name: Free iPhone test package (6 tests)
+    if: github.event.repository.private == false
+    runs-on: macos-15-intel
+    timeout-minutes: 25
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install XcodeGen
+        run: command -v xcodegen >/dev/null || brew install xcodegen
+      - name: Build standalone iPhone package and run six Simulator tests
+        run: bash scripts/ci-iphone-free.sh
+      - name: Upload tested unsigned IPA for Windows local signing
+        uses: actions/upload-artifact@v4
+        with:
+          name: DropMP4-Free-unsigned
+          path: |
+            build/iphone-free/DropMP4-Free-unsigned.ipa
+            build/iphone-free/DropMP4-Free-unsigned.ipa.sha256
+            docs/IPHONE_WINDOWS_FREE.md
+          if-no-files-found: error
+          retention-days: 7
+      - name: Collect free variant diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: iphone-free-diagnostics-${{ github.run_number }}
+          path: |
+            build/iphone-free/*.log
+            build/iphone-free/*.txt
+            build/iphone-free/*.json
+            build/iphone-free/*.xcresult
+          if-no-files-found: warn
+          retention-days: 3
+      - name: Explain installation requirement
+        if: always()
+        run: |
+          echo '### Free iPhone test variant' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Standalone local Files import; no App Groups or Photos share extension. Original full variant is retained.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'The IPA is UNSIGNED. A Windows sideloading tool must sign it locally with your own free Apple account before installation.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'No Apple credentials, developer certificates, payments or TestFlight in this workflow.' >> "$GITHUB_STEP_SUMMARY"
   receiver:
     # Public standard runners are free. Do not incur private-repo usage if visibility changes.
     if: github.event.repository.private == false

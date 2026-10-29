@@ -1,6 +1,10 @@
 import XCTest
 import AVFoundation
+#if DROPMP4_FREE_TEST
+@testable import DropMP4Free
+#else
 @testable import DropMP4
+#endif
 
 final class RemuxTests: XCTestCase {
     func testKnownSHA256() throws {

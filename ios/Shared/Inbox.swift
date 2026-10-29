@@ -9,10 +9,15 @@ enum DropError: LocalizedError {
 
 enum Inbox {
     static func directory() throws -> URL {
+        #if DROPMP4_FREE_TEST
+        let root = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask,
+                                               appropriateFor: nil, create: true)
+        #else
         guard let group = Bundle.main.object(forInfoDictionaryKey: "SharedGroup") as? String,
               let root = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: group) else {
             throw DropError.message("App Group 尚未設定，請檢查兩個 Target 的簽署設定。")
         }
+        #endif
         let url = root.appendingPathComponent("Inbox", isDirectory: true)
         try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
         return url
@@ -42,4 +47,16 @@ enum Inbox {
             .filter { ["mov", "mp4"].contains($0.pathExtension.lowercased()) }
             .sorted { $0.lastPathComponent < $1.lastPathComponent }
     }
+}
+
+enum AppFeatures {
+    #if DROPMP4_FREE_TEST
+    static let localImportOnly = true
+    static let title = "DropMP4 測試版"
+    static let importHint = "先將照片中的影片儲存到「檔案 → 我的 iPhone」，再按「從檔案匯入影片」。此免費測試版暫不含照片分享擴充功能。"
+    #else
+    static let localImportOnly = false
+    static let title = "DropMP4"
+    static let importHint = "從照片的分享選單匯入影片，再回到這裡傳送。"
+    #endif
 }

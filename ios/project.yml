@@ -10,6 +10,37 @@ settings:
     GROUP_ID: group.org.dropmp4.app
     CODE_SIGN_STYLE: Automatic
 targets:
+  DropMP4Free:
+    type: application
+    platform: iOS
+    sources: [App, Shared]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.dropmp4.freetest
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) DROPMP4_FREE_TEST
+        ENABLE_APP_GROUPS: NO
+    info:
+      path: Generated/Free-Info.plist
+      properties:
+        CFBundleDisplayName: DropMP4 Test
+        UILaunchScreen: {}
+        UIRequiresFullScreen: true
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        NSLocalNetworkUsageDescription: 尋找同一個 Wi-Fi 上的 DropMP4 電腦，直接傳送影片。
+        NSBonjourServices: [_dropmp4._tcp]
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+  DropMP4FreeTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [Tests, FreeTests]
+    dependencies:
+      - target: DropMP4Free
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.dropmp4.freetest.tests
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) DROPMP4_FREE_TEST
   DropMP4:
     type: application
     platform: iOS
@@ -67,6 +98,12 @@ targets:
       properties:
         com.apple.security.application-groups: [$(GROUP_ID)]
 schemes:
+  DropMP4Free:
+    build:
+      targets:
+        DropMP4Free: all
+    test:
+      targets: [DropMP4FreeTests]
   DropMP4:
     build:
       targets:

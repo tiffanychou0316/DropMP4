@@ -3,14 +3,19 @@ import json
 import os
 from pathlib import Path
 import sys
+import argparse
 
-result = json.loads(Path(sys.argv[1]).read_text())
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("summary", type=Path)
+parser.add_argument("--expected", type=int, default=4)
+args = parser.parse_args()
+result = json.loads(args.summary.read_text())
 counts = {key: result.get(key) for key in
           ["totalTestCount", "passedTests", "failedTests", "skippedTests"]}
-expected = {"totalTestCount": 4, "passedTests": 4, "failedTests": 0, "skippedTests": 0}
+expected = {"totalTestCount": args.expected, "passedTests": args.expected, "failedTests": 0, "skippedTests": 0}
 if counts != expected:
-    raise SystemExit(f"Expected four passed, zero failed/skipped XCTest cases; got {counts}")
-message = "iOS XCTest: 4 passed, 0 failed, 0 skipped."
+    raise SystemExit(f"Expected {args.expected} passed, zero failed/skipped XCTest cases; got {counts}")
+message = f"iOS XCTest: {args.expected} passed, 0 failed, 0 skipped."
 print(message)
 if os.getenv("GITHUB_STEP_SUMMARY"):
     with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a") as output:
